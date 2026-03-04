@@ -10,7 +10,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string |
 
 const containerStyle = { width: "100%", height: "400px" };
 
-const MissionViewMap = ({ waypoints }: { waypoints: Waypoint[] }) => {
+const MissionViewMap = ({ waypoints, mode }: { waypoints: Waypoint[]; mode?: "area" | "corredor" }) => {
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -59,7 +59,7 @@ const MissionViewMap = ({ waypoints }: { waypoints: Waypoint[] }) => {
           options={{ strokeColor: "hsl(210, 100%, 45%)", strokeWeight: 3, strokeOpacity: 0.8 }}
         />
       )}
-      {waypoints.length > 2 && (
+      {mode === "area" && waypoints.length > 2 && (
         <Polygon
           paths={waypoints}
           options={{

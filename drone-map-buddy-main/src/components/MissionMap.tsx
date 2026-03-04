@@ -1,4 +1,4 @@
-import { GoogleMap, useJsApiLoader, Marker, Polyline } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, Marker, Polyline, Polygon } from "@react-google-maps/api";
 import { useCallback } from "react";
 
 interface Waypoint {
@@ -9,6 +9,7 @@ interface Waypoint {
 interface MissionMapProps {
   waypoints: Waypoint[];
   onChange: (waypoints: Waypoint[]) => void;
+  mode?: "area" | "corredor";
 }
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
@@ -16,7 +17,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string |
 const containerStyle = { width: "100%", height: "400px" };
 const defaultCenter = { lat: -15.7801, lng: -47.9292 }; // Brasília
 
-const MissionMap = ({ waypoints, onChange }: MissionMapProps) => {
+const MissionMap = ({ waypoints, onChange, mode }: MissionMapProps) => {
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -80,6 +81,18 @@ const MissionMap = ({ waypoints, onChange }: MissionMapProps) => {
         <Polyline
           path={waypoints}
           options={{ strokeColor: "hsl(210, 100%, 45%)", strokeWeight: 3, strokeOpacity: 0.8 }}
+        />
+      )}
+      {mode === "area" && waypoints.length > 2 && (
+        <Polygon
+          paths={waypoints}
+          options={{
+            fillColor: "hsl(210, 100%, 45%)",
+            fillOpacity: 0.15,
+            strokeColor: "hsl(210, 100%, 45%)",
+            strokeWeight: 2,
+            strokeOpacity: 0.5,
+          }}
         />
       )}
     </GoogleMap>

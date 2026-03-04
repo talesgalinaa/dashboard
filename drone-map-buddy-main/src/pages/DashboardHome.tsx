@@ -7,7 +7,38 @@ import { Truck, Map, CheckCircle, AlertCircle } from "lucide-react";
 
 const DashboardHome = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ vehicles: 0, missions: 0, active: 0, completed: 0 });
+  const [stats, setStats] = useState({ vehicles: 0, missions: 0, active: 0, completed: 0, dailyArea: 0, totalArea: 0, dailyDistance: 0, totalDistance: 0 });
+
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const haversine = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const R = 6371000;
+    const dLat = toRad(b.lat - a.lat);
+    const dLon = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const sinDlat = Math.sin(dLat / 2);
+    const sinDlon = Math.sin(dLon / 2);
+    const inside = sinDlat * sinDlat + Math.cos(lat1) * Math.cos(lat2) * sinDlon * sinDlon;
+    const c = 2 * Math.atan2(Math.sqrt(inside), Math.sqrt(1 - inside));
+    return R * c;
+  };
+
+  const distanceFor = (wps: { lat: number; lng: number }[]) => {
+    if (wps.length < 2) return 0;
+    return wps.slice(1).reduce((sum, wp, i) => sum + haversine(wps[i], wp), 0);
+  };
+
+  // calculate area using shoelace, with degree->meter approx
+  const areaFor = (wps: { lat: number; lng: number }[]) => {
+    if (wps.length < 3) return 0;
+    let area = 0;
+    for (let i = 0; i < wps.length; i++) {
+      const j = (i + 1) % wps.length;
+      area += wps[i].lng * wps[j].lat - wps[j].lng * wps[i].lat;
+    }
+    const factor = 111320; // meters per degree
+    return Math.abs(area) / 2 * factor * factor;
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -17,7 +48,37 @@ const DashboardHome = () => {
         const mSnap = await getDocs(query(collection(db, "missions"), where("userId", "==", user.uid)));
         const active = vSnap.docs.filter((d) => d.data().status === "ativo").length;
         const completed = mSnap.docs.filter((d) => d.data().status === "concluída").length;
-        setStats({ vehicles: vSnap.size, missions: mSnap.size, active, completed });
+
+        // compute areas
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        let totalArea = 0;
+        let dailyArea = 0;
+        let totalDistance = 0;
+        let dailyDistance = 0;
+        mSnap.docs.forEach((d) => {
+          const data: any = d.data();
+          if (Array.isArray(data.waypoints)) {
+            const a = areaFor(data.waypoints);
+            const dist = distanceFor(data.waypoints);
+            if (data.mode === "area") {
+              totalArea += a;
+            }
+            totalDistance += dist;
+            const created: any = data.createdAt;
+            let date: Date | null = null;
+            if (created && created.toDate) date = created.toDate();
+            else if (created instanceof Date) date = created;
+            if (date && date >= startOfToday) {
+              if (data.mode === "area") {
+                dailyArea += a;
+              }
+              dailyDistance += dist;
+            }
+          }
+        });
+
+        setStats({ vehicles: vSnap.size, missions: mSnap.size, active, completed, totalArea, dailyArea, totalDistance, dailyDistance });
       } catch {
         // Firebase not configured yet
       }
@@ -30,6 +91,10 @@ const DashboardHome = () => {
     { title: "Missões", value: stats.missions, icon: Map, color: "text-accent" },
     { title: "Drones Ativos", value: stats.active, icon: CheckCircle, color: "text-success" },
     { title: "Missões Concluídas", value: stats.completed, icon: AlertCircle, color: "text-warning" },
+    { title: "Área Hoje", value: `${(stats.dailyArea / 1e6).toFixed(2)} km²`, icon: Map, color: "text-primary" },
+    { title: "Área Total", value: `${(stats.totalArea / 1e6).toFixed(2)} km²`, icon: Map, color: "text-accent" },
+    { title: "Distância Hoje", value: `${(stats.dailyDistance / 1000).toFixed(2)} km`, icon: Map, color: "text-primary" },
+    { title: "Distância Total", value: `${(stats.totalDistance / 1000).toFixed(2)} km`, icon: Map, color: "text-accent" },
   ];
 
   return (
