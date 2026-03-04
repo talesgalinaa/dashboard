@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,7 @@ interface Vehicle {
   model: string;
   status: "ativo" | "inativo";
   userId: string;
-  createdAt: any;
+  createdAt: Timestamp | null;
 }
 
 const Vehicles = () => {
@@ -29,7 +29,7 @@ const Vehicles = () => {
   const [model, setModel] = useState("");
   const [status, setStatus] = useState<"ativo" | "inativo">("ativo");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!user) return;
     try {
       const snap = await getDocs(query(collection(db, "vehicles"), where("userId", "==", user.uid)));
@@ -37,9 +37,11 @@ const Vehicles = () => {
     } catch {
       // Firebase not configured
     }
-  };
+  }, [user]);
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const resetForm = () => { setName(""); setModel(""); setStatus("ativo"); setEditId(null); };
 

@@ -6,7 +6,7 @@ interface Waypoint {
   lng: number;
 }
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyAQC4HNiqEM_aIR9qmpXtW08g8WEr8gUIg";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
 const containerStyle = { width: "100%", height: "400px" };
 
@@ -26,7 +26,14 @@ const MissionViewMap = ({ waypoints }: { waypoints: Waypoint[] }) => {
   if (!isLoaded) {
     return (
       <div className="w-full h-[400px] bg-muted flex items-center justify-center text-muted-foreground text-sm">
-        Carregando mapa...
+        {GOOGLE_MAPS_API_KEY ? (
+          "Carregando mapa..."
+        ) : (
+          <div className="text-center">
+            <div>Chave da API do Google Maps não configurada.</div>
+            <div className="text-xs">Defina `VITE_GOOGLE_MAPS_API_KEY` em seu `.env`.</div>
+          </div>
+        )}
       </div>
     );
   }

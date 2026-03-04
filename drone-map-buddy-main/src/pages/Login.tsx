@@ -21,7 +21,7 @@ const Login = () => {
     try {
       await signIn(email, password);
       navigate("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Erro ao fazer login. Verifique suas credenciais.");
     } finally {
       setLoading(false);

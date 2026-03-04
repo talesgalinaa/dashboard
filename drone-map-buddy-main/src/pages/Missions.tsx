@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,7 +26,7 @@ interface Mission {
   waypoints: Waypoint[];
   status: "planejada" | "em andamento" | "concluída";
   userId: string;
-  createdAt: any;
+  createdAt: Timestamp | null;
 }
 
 interface Vehicle {
@@ -46,7 +46,7 @@ const Missions = () => {
   const [vehicleId, setVehicleId] = useState("");
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!user) return;
     try {
       const mSnap = await getDocs(query(collection(db, "missions"), where("userId", "==", user.uid)));
@@ -56,9 +56,11 @@ const Missions = () => {
     } catch {
       // Firebase not configured
     }
-  };
+  }, [user]);
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleCreate = async () => {
     if (!user || !name.trim() || !vehicleId || waypoints.length < 2) {

@@ -31,7 +31,7 @@ const Register = () => {
       await signUp(email, password);
       toast.success("Conta criada com sucesso!");
       navigate("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Erro ao criar conta. Tente novamente.");
     } finally {
       setLoading(false);
