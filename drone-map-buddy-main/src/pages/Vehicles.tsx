@@ -46,7 +46,15 @@ const Vehicles = () => {
   const resetForm = () => { setName(""); setModel(""); setStatus("ativo"); setEditId(null); };
 
   const handleSave = async () => {
-    if (!user || !name.trim() || !model.trim()) { toast.error("Preencha todos os campos."); return; }
+    if (!user) {
+      toast.error("Você precisa estar logado para adicionar veículos.");
+      console.error("handleSave: no user in context");
+      return;
+    }
+    if (!name.trim() || !model.trim()) {
+      toast.error("Preencha todos os campos.");
+      return;
+    }
     try {
       if (editId) {
         await updateDoc(doc(db, "vehicles", editId), { name, model, status });
@@ -58,7 +66,8 @@ const Vehicles = () => {
       resetForm();
       setOpen(false);
       load();
-    } catch {
+    } catch (err) {
+      console.error("handleSave error:", err);
       toast.error("Erro ao salvar. Verifique a config do Firebase.");
     }
   };
