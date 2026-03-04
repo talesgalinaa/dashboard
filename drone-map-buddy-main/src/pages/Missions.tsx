@@ -123,7 +123,13 @@ const Missions = () => {
                 <div className="space-y-2">
                   <Label>Veículo</Label>
                   <Select value={vehicleId} onValueChange={setVehicleId}>
-                    <SelectTrigger><SelectValue placeholder="Selecione um drone" /></SelectTrigger>
+                    <SelectTrigger>
+                      <span className="block truncate">
+                        {vehicles.find((v) => v.id === vehicleId)?.name || (
+                          <span className="text-muted-foreground">Selecione um drone</span>
+                        )}
+                      </span>
+                    </SelectTrigger>
                     <SelectContent>
                       {vehicles.map((v) => (
                         <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
