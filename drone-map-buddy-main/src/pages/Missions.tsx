@@ -124,11 +124,11 @@ const Missions = () => {
                   <Label>Veículo</Label>
                   <Select value={vehicleId} onValueChange={setVehicleId}>
                     <SelectTrigger>
-                      <span className="block truncate">
+                      <SelectValue className="block truncate">
                         {vehicles.find((v) => v.id === vehicleId)?.name || (
                           <span className="text-muted-foreground">Selecione um drone</span>
                         )}
-                      </span>
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {vehicles.map((v) => (
